@@ -1,16 +1,29 @@
+import { join } from "path";
 import * as cdk from 'aws-cdk-lib';
+import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
+import * as apiGateway from "aws-cdk-lib/aws-apigateway";
+import { Runtime } from "aws-cdk-lib/aws-lambda";
 import { Construct } from 'constructs';
-// import * as sqs from 'aws-cdk-lib/aws-sqs';
+
 
 export class CdkPractiseStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // The code that defines your stack goes here
+    const myLambdaFilePath = join(__dirname, "..", "lambda", "index.ts");
 
-    // example resource
-    // const queue = new sqs.Queue(this, 'CdkPractiseQueue', {
-    //   visibilityTimeout: cdk.Duration.seconds(300)
-    // });
+    const myLambda = new NodejsFunction(this, "MyLambda", {
+      runtime: Runtime.NODEJS_18_X,
+      handler: "handler",
+      functionName: "test-function",
+      entry: myLambdaFilePath,
+    });
+
+    const api = new apiGateway.RestApi(this, 'demo-api');
+    const photosResource = api.root.addResource('photos')
+    const getPhotosLambdaIntegration = new apiGateway.LambdaIntegration(myLambda)
+
+    photosResource.addMethod('GET', getPhotosLambdaIntegration);
+
   }
 }
